@@ -1,0 +1,15 @@
+[package]
+name = "simple-viewer"
+version.workspace = true
+edition.workspace = true
+publish = false
+
+[dependencies]
+console_error_panic_hook.workspace = true
+leptos = { workspace = true, default-features = false, features = ["csr"] }
+leptos-rerun = { path = "../../leptos-rerun", default-features = false, features = ["csr"] }
+wasm-bindgen.workspace = true
+web-sys = { workspace = true, features = ["console"] }
+
+[features]
+csr = []

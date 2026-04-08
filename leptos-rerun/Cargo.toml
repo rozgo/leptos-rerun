@@ -1,0 +1,42 @@
+[package]
+name = "leptos-rerun"
+description = "Rerun components for the Leptos web framework."
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+readme = "../README.md"
+
+[lib]
+crate-type = ["rlib", "cdylib"]
+
+[dependencies]
+js-sys = { workspace = true }
+leptos = { workspace = true }
+send_wrapper = { workspace = true }
+serde = { workspace = true }
+serde-wasm-bindgen = { workspace = true }
+wasm-bindgen = { workspace = true }
+wasm-bindgen-futures = { workspace = true }
+web-sys = { workspace = true, features = [
+    "Document",
+    "Element",
+    "HtmlDivElement",
+    "HtmlElement",
+    "Window",
+    "console",
+] }
+
+[dev-dependencies]
+console_error_panic_hook = { workspace = true }
+serde_json = { workspace = true }
+wasm-bindgen-test = { workspace = true }
+
+[features]
+default = []
+csr = ["leptos/csr"]
+hydrate = ["leptos/hydrate"]
+ssr = ["leptos/ssr"]
+
+[package.metadata.docs.rs]
+all-features = true
