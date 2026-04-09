@@ -36,6 +36,7 @@ pub fn RerunViewer(
     #[prop(optional, into, default = false.into())] hide_welcome_screen: Signal<bool>,
     #[prop(optional, into)] manifest_url: Signal<Option<String>>,
     #[prop(optional, into, default = false.into())] allow_fullscreen: Signal<bool>,
+    #[prop(optional, into, default = false.into())] follow_if_http: Signal<bool>,
     #[prop(optional)] on_event: Option<Callback<RerunViewerEvent>>,
 ) -> impl IntoView {
     let context = provide_rerun_viewer_context();
@@ -51,6 +52,7 @@ pub fn RerunViewer(
         &hide_welcome_screen,
         &manifest_url,
         &allow_fullscreen,
+        &follow_if_http,
         &on_event,
     );
 
@@ -110,6 +112,7 @@ pub fn RerunViewer(
         let context = context.clone();
         let viewer_revision = context.viewer_revision_signal();
         let rrd = rrd.clone();
+        let follow_if_http = follow_if_http.clone();
 
         move |_| {
             if viewer_revision.get() == 0 {
@@ -117,7 +120,7 @@ pub fn RerunViewer(
             }
 
             let sources = rrd.get();
-            context.sync_sources(sources.as_slice());
+            context.sync_sources(sources.as_slice(), follow_if_http.get());
         }
     });
 

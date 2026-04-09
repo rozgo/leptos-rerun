@@ -98,6 +98,7 @@ The main public surface lives on `RerunViewer`.
 - `hide_welcome_screen`
 - `manifest_url`
 - `allow_fullscreen`
+- `follow_if_http`
 - `class`, `style`, `node_ref`
 - `on_event`
 
@@ -142,10 +143,9 @@ Useful enums and value types are re-exported from the prelude:
 - `last_event`, `last_event_signal`
 - `last_error`, `last_error_signal`
 
-Current scope note:
-
-- Declarative `rrd` is URL-based
-- If you need `follow_if_http`, use `RerunViewerContext::open(url, true)`
+`follow_if_http` applies the documented Rerun `viewer.open(url, { follow_if_http: true })`
+behavior to declarative `rrd` URLs. This is useful for HTTP-backed sources such as remote
+`.mcap` files.
 
 ## Examples
 
@@ -165,6 +165,11 @@ trunk serve --open
 
 ```bash
 cd examples/gallery-viewer
+trunk serve --open
+```
+
+```bash
+cd examples/mcap-viewer
 trunk serve --open
 ```
 

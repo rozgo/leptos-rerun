@@ -4,6 +4,7 @@ members = [
     "examples/simple-viewer",
     "examples/with-server",
     "examples/gallery-viewer",
+    "examples/mcap-viewer",
 ]
 default-members = ["leptos-rerun"]
 resolver = "2"

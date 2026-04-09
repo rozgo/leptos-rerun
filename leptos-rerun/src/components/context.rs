@@ -323,7 +323,7 @@ impl RerunViewerContext {
         not(all(not(feature = "ssr"), target_arch = "wasm32")),
         allow(dead_code)
     )]
-    pub(crate) fn sync_sources(&self, _urls: &[String]) {
+    pub(crate) fn sync_sources(&self, _urls: &[String], follow_if_http: bool) {
         #[cfg(target_arch = "wasm32")]
         {
             let sources: Vec<SourceRegistration> = _urls
@@ -335,7 +335,7 @@ impl RerunViewerContext {
                     } else {
                         Some(SourceRegistration {
                             url: url.to_string(),
-                            follow_if_http: false,
+                            follow_if_http,
                         })
                     }
                 })
@@ -347,6 +347,8 @@ impl RerunViewerContext {
                 bridge::sync_sources(bridge_handle, sources_value)
             });
         }
+        #[cfg(not(target_arch = "wasm32"))]
+        let _ = (_urls, follow_if_http);
     }
 
     #[cfg_attr(
