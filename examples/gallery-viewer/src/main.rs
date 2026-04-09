@@ -75,7 +75,7 @@ fn App() -> impl IntoView {
                         children=move |(_, example)| {
                             view! {
                                 <article
-                                    style="display: grid; grid-template-rows: auto minmax(0, 1fr); min-height: 340px; border-radius: 24px; overflow: hidden; border: 1px solid rgba(255, 255, 255, 0.08); box-shadow: 0 18px 60px rgba(0, 0, 0, 0.36); background: linear-gradient(180deg, rgba(16, 20, 31, 0.96) 0%, rgba(10, 13, 20, 0.98) 100%);"
+                                    style="display: grid; grid-template-rows: auto auto; border-radius: 24px; overflow: hidden; border: 1px solid rgba(255, 255, 255, 0.08); box-shadow: 0 18px 60px rgba(0, 0, 0, 0.36); background: linear-gradient(180deg, rgba(16, 20, 31, 0.96) 0%, rgba(10, 13, 20, 0.98) 100%);"
                                 >
                                     <div style="display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 14px 16px 12px; border-bottom: 1px solid rgba(255, 255, 255, 0.06);">
                                         <div>
@@ -89,9 +89,9 @@ fn App() -> impl IntoView {
                                         <div style="width: 10px; height: 10px; border-radius: 999px; background: linear-gradient(135deg, #9ae6b4 0%, #63b3ed 100%); box-shadow: 0 0 18px rgba(99, 179, 237, 0.4); flex: 0 0 auto;"></div>
                                     </div>
 
-                                    <div style="min-height: 0; padding: 0;">
+                                    <div style="padding: 0; aspect-ratio: 16 / 10; min-height: 286px;">
                                         <RerunViewer
-                                            style="width: 100%; height: 100%; min-height: 286px;".to_string()
+                                            style="width: 100%; height: 100%;".to_string()
                                             rrd=example.url
                                             panel_state_overrides=[
                                                 (Panel::Top, PanelState::Hidden),
