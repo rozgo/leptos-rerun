@@ -10,6 +10,8 @@ use crate::{
 
 #[cfg(all(not(feature = "ssr"), target_arch = "wasm32"))]
 use crate::components::context::{PanelRegistration, StartupOptions};
+#[cfg(all(not(feature = "ssr"), target_arch = "wasm32"))]
+use wasm_bindgen::{JsCast, closure::Closure};
 
 fn normalize_container_style(style: &str) -> String {
     if style.trim().is_empty() {
@@ -58,6 +60,8 @@ pub fn RerunViewer(
 
     #[cfg(all(not(feature = "ssr"), target_arch = "wasm32"))]
     let last_started_options = RwSignal::new(None::<(AssetOrigin, StartupOptions)>);
+    #[cfg(all(not(feature = "ssr"), target_arch = "wasm32"))]
+    let pending_start_nonce = RwSignal::new(0_u64);
 
     #[cfg(all(not(feature = "ssr"), target_arch = "wasm32"))]
     Effect::new({
@@ -72,11 +76,12 @@ pub fn RerunViewer(
         let allow_fullscreen = allow_fullscreen.clone();
         let on_event = on_event.clone();
         let last_started_options = last_started_options;
+        let pending_start_nonce = pending_start_nonce;
 
         move |_| {
-            let Some(div) = node_ref.get() else {
+            if node_ref.get().is_none() {
                 return;
-            };
+            }
 
             let startup_options = StartupOptions {
                 manifest_url: manifest_url.get(),
@@ -96,10 +101,11 @@ pub fn RerunViewer(
 
             last_started_options.set(Some(next_options));
             context.destroy_viewer();
-
-            let element: web_sys::HtmlElement = div.into();
-            context.start_viewer(
-                element,
+            pending_start_nonce.update(|nonce| *nonce = nonce.wrapping_add(1));
+            schedule_viewer_start(
+                node_ref.clone(),
+                pending_start_nonce,
+                context.clone(),
                 startup_options,
                 asset_origin.clone(),
                 on_event.clone(),
@@ -157,3 +163,38 @@ pub fn RerunViewer(
 
 #[allow(dead_code)]
 fn _assert_context_is_cloneable(_context: RerunViewerContext) {}
+
+#[cfg(all(not(feature = "ssr"), target_arch = "wasm32"))]
+fn schedule_viewer_start(
+    node_ref: NodeRef<Div>,
+    pending_start_nonce: RwSignal<u64>,
+    context: RerunViewerContext,
+    startup_options: StartupOptions,
+    asset_origin: AssetOrigin,
+    on_event: Option<Callback<RerunViewerEvent>>,
+) {
+    let expected_nonce = pending_start_nonce.get_untracked();
+    let callback = Closure::once_into_js(move || {
+        if pending_start_nonce
+            .try_get_untracked()
+            .is_none_or(|nonce| nonce != expected_nonce)
+        {
+            return;
+        }
+
+        let Some(div) = node_ref.get() else {
+            return;
+        };
+        let element: web_sys::HtmlElement = div.into();
+        if !element.is_connected() {
+            return;
+        }
+
+        context.start_viewer(element, startup_options, asset_origin, on_event);
+    });
+
+    if let Some(window) = web_sys::window() {
+        let _ = window
+            .set_timeout_with_callback_and_timeout_and_arguments_0(callback.unchecked_ref(), 0);
+    }
+}
