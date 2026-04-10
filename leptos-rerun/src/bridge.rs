@@ -49,12 +49,25 @@ function normalizeSources(sources) {
     if (!source || typeof source.url !== "string" || source.url.length === 0) {
       continue;
     }
+    const browserUrl = toBrowserUrl(source.url);
     normalized.set(
-      source.url,
-      Boolean(source.follow_if_http) || normalized.get(source.url) === true,
+      browserUrl,
+      Boolean(source.follow_if_http) || normalized.get(browserUrl) === true,
     );
   }
   return normalized;
+}
+
+function toBrowserUrl(url) {
+  if (typeof url !== "string" || url.length === 0) {
+    return url;
+  }
+
+  try {
+    return new URL(url, window.location.href).toString();
+  } catch (_error) {
+    return url;
+  }
 }
 
 function normalizePanels(overrides) {
@@ -138,11 +151,11 @@ export function syncPanelOverrides(bridge, overrides, enabled) {
 }
 
 export function openSource(bridge, url, followIfHttp) {
-  bridge.viewer.open(url, { follow_if_http: Boolean(followIfHttp) });
+  bridge.viewer.open(toBrowserUrl(url), { follow_if_http: Boolean(followIfHttp) });
 }
 
 export function closeSource(bridge, url) {
-  bridge.viewer.close(url);
+  bridge.viewer.close(toBrowserUrl(url));
 }
 
 export function setActiveRecordingId(bridge, recordingId) {
