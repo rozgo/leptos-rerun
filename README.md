@@ -45,7 +45,7 @@ fn App() -> impl IntoView {
     view! {
         <RerunViewer
             style="width: 100%; height: 100vh;".to_string()
-            rrd="https://app.rerun.io/version/0.31.2/examples/dna.rrd"
+            rrd="https://app.rerun.io/version/0.31.4/examples/dna.rrd"
             panel_state_overrides=[(Panel::Blueprint, PanelState::Collapsed)]
             hide_welcome_screen=true
             theme=Theme::Dark
@@ -70,7 +70,7 @@ fn GalleryGrid() -> impl IntoView {
         >
             <RerunViewer
                 style="width: 100%; min-height: 286px;".to_string()
-                rrd="https://app.rerun.io/version/0.31.2/examples/dna.rrd"
+                rrd="https://app.rerun.io/version/0.31.4/examples/dna.rrd"
                 panel_state_overrides=[
                     (Panel::Top, PanelState::Hidden),
                     (Panel::Blueprint, PanelState::Hidden),
@@ -182,5 +182,5 @@ cargo leptos watch
 
 ## Notes
 
-- The default viewer asset origin is pinned to `@rerun-io/web-viewer@0.31.2` on jsDelivr.
+- The default viewer asset origin is pinned to `@rerun-io/web-viewer@0.31.4` on jsDelivr.
 - If an environment has trouble creating the default surface, try `render_backend=RenderBackend::Webgl`.
