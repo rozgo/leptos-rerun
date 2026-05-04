@@ -9,7 +9,7 @@ use crate::{
 };
 
 #[cfg(all(not(feature = "ssr"), target_arch = "wasm32"))]
-use crate::components::context::{PanelRegistration, StartupOptions};
+use crate::components::context::{PanelRegistration, PlaybackOptions, StartupOptions};
 #[cfg(all(not(feature = "ssr"), target_arch = "wasm32"))]
 use wasm_bindgen::{JsCast, closure::Closure};
 
@@ -39,6 +39,9 @@ pub fn RerunViewer(
     #[prop(optional, into)] manifest_url: Signal<Option<String>>,
     #[prop(optional, into, default = false.into())] allow_fullscreen: Signal<bool>,
     #[prop(optional, into, default = false.into())] follow_if_http: Signal<bool>,
+    #[prop(optional, into, default = false.into())] autoplay: Signal<bool>,
+    #[prop(optional, into, default = false.into())] loop_playback: Signal<bool>,
+    #[prop(optional, into)] playback_timeline: Signal<Option<String>>,
     #[prop(optional)] on_event: Option<Callback<RerunViewerEvent>>,
 ) -> impl IntoView {
     let context = provide_rerun_viewer_context();
@@ -55,6 +58,9 @@ pub fn RerunViewer(
         &manifest_url,
         &allow_fullscreen,
         &follow_if_http,
+        &autoplay,
+        &loop_playback,
+        &playback_timeline,
         &on_event,
     );
 
@@ -147,6 +153,27 @@ pub fn RerunViewer(
                 .map(|(panel, state)| PanelRegistration { panel, state })
                 .collect();
             context.sync_panel_overrides(&registrations);
+        }
+    });
+
+    #[cfg(all(not(feature = "ssr"), target_arch = "wasm32"))]
+    Effect::new({
+        let context = context.clone();
+        let viewer_revision = context.viewer_revision_signal();
+        let autoplay = autoplay.clone();
+        let loop_playback = loop_playback.clone();
+        let playback_timeline = playback_timeline.clone();
+
+        move |_| {
+            if viewer_revision.get() == 0 {
+                return;
+            }
+
+            context.sync_playback_options(&PlaybackOptions {
+                autoplay: autoplay.get(),
+                loop_playback: loop_playback.get(),
+                timeline: playback_timeline.get(),
+            });
         }
     });
 

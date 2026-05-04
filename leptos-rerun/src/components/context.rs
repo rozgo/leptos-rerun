@@ -57,6 +57,18 @@ pub(crate) struct PanelRegistration {
     pub(crate) state: PanelState,
 }
 
+#[cfg_attr(
+    not(all(not(feature = "ssr"), target_arch = "wasm32")),
+    allow(dead_code)
+)]
+#[derive(Clone, Debug, PartialEq, Eq, serde::Serialize)]
+pub(crate) struct PlaybackOptions {
+    pub(crate) autoplay: bool,
+    pub(crate) loop_playback: bool,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub(crate) timeline: Option<String>,
+}
+
 struct ViewerRuntime {
     ready: RwSignal<bool>,
     viewer_revision: RwSignal<u64>,
@@ -366,6 +378,24 @@ impl RerunViewerContext {
                 bridge::sync_panel_overrides(bridge_handle, panels_value, enabled)
             });
         }
+    }
+
+    #[cfg_attr(
+        not(all(not(feature = "ssr"), target_arch = "wasm32")),
+        allow(dead_code)
+    )]
+    pub(crate) fn sync_playback_options(&self, _options: &PlaybackOptions) {
+        #[cfg(target_arch = "wasm32")]
+        {
+            let options = _options.clone();
+            self.with_bridge(move |bridge_handle| {
+                let options_value = serde_wasm_bindgen::to_value(&options)
+                    .map_err(|error| JsValue::from_str(&error.to_string()))?;
+                bridge::sync_playback_options(bridge_handle, options_value)
+            });
+        }
+        #[cfg(not(target_arch = "wasm32"))]
+        let _ = _options;
     }
 
     #[cfg(target_arch = "wasm32")]

@@ -20,7 +20,8 @@ async function loadWebViewer(moduleUrl) {
   return WebViewer;
 }
 
-function registerEvents(viewer, eventCallback) {
+function registerEvents(bridge, eventCallback) {
+  const { viewer } = bridge;
   const unsubscribers = [];
   unsubscribers.push(viewer.on("ready", () => eventCallback({ type: "ready" })));
   unsubscribers.push(
@@ -37,10 +38,135 @@ function registerEvents(viewer, eventCallback) {
     "selection_change",
     "recording_open",
   ]) {
-    unsubscribers.push(viewer.on(eventName, (event) => eventCallback(event)));
+    unsubscribers.push(viewer.on(eventName, (event) => {
+      handlePlaybackEvent(bridge, event);
+      eventCallback(event);
+    }));
   }
 
   return unsubscribers;
+}
+
+function normalizePlaybackOptions(options) {
+  return {
+    autoplay: Boolean(options?.autoplay),
+    loopPlayback: Boolean(options?.loop_playback),
+    timeline:
+      typeof options?.timeline === "string" && options.timeline.length > 0
+        ? options.timeline
+        : null,
+  };
+}
+
+function playbackRecordingId(event) {
+  return typeof event?.recording_id === "string" && event.recording_id.length > 0
+    ? event.recording_id
+    : null;
+}
+
+function playbackTimeline(bridge, recordingId, event) {
+  if (bridge.playbackOptions.timeline) {
+    return bridge.playbackOptions.timeline;
+  }
+  if (typeof event?.timeline === "string" && event.timeline.length > 0) {
+    return event.timeline;
+  }
+  try {
+    return bridge.viewer.get_active_timeline(recordingId);
+  } catch (_error) {
+    return null;
+  }
+}
+
+function configurePlayback(bridge, recordingId, event) {
+  const { autoplay, timeline } = bridge.playbackOptions;
+  if (!autoplay && !timeline) {
+    return;
+  }
+
+  window.setTimeout(() => {
+    const activeTimeline = playbackTimeline(bridge, recordingId, event);
+    try {
+      if (timeline && activeTimeline) {
+        bridge.viewer.set_active_timeline(recordingId, activeTimeline);
+      }
+      if (autoplay) {
+        bridge.viewer.set_playing(recordingId, true);
+      }
+    } catch (_error) {
+      // The recording may have been closed before the deferred setup ran.
+    }
+  }, 0);
+}
+
+function maybeLoopPlayback(bridge, recordingId, event) {
+  if (!bridge.playbackOptions.loopPlayback) {
+    return;
+  }
+
+  const timeline = playbackTimeline(bridge, recordingId, event);
+  if (!timeline) {
+    return;
+  }
+
+  let range;
+  let time;
+  try {
+    range = bridge.viewer.get_time_range(recordingId, timeline);
+    time = typeof event?.time === "number"
+      ? event.time
+      : bridge.viewer.get_current_time(recordingId, timeline);
+  } catch (_error) {
+    return;
+  }
+
+  if (!range || typeof range.min !== "number" || typeof range.max !== "number") {
+    return;
+  }
+  const span = range.max - range.min;
+  if (!Number.isFinite(span) || span <= 0 || !Number.isFinite(time)) {
+    return;
+  }
+
+  const tolerance = Math.max(Math.abs(span) * 0.001, 0.01);
+  if (time < range.max - tolerance) {
+    return;
+  }
+
+  const loopKey = `${recordingId}:${timeline}`;
+  const now = Date.now();
+  if ((bridge.loopResets.get(loopKey) ?? 0) + 250 > now) {
+    return;
+  }
+  bridge.loopResets.set(loopKey, now);
+
+  try {
+    bridge.viewer.set_current_time(recordingId, timeline, range.min);
+    bridge.viewer.set_playing(recordingId, true);
+  } catch (_error) {
+    // Ignore transient viewer state while sources are changing.
+  }
+}
+
+function handlePlaybackEvent(bridge, event) {
+  const recordingId = playbackRecordingId(event);
+  if (!recordingId) {
+    return;
+  }
+  bridge.recordings.add(recordingId);
+
+  if (event?.type === "recording_open") {
+    configurePlayback(bridge, recordingId, event);
+    return;
+  }
+
+  if (event?.type === "timeline_change" && bridge.playbackOptions.autoplay) {
+    configurePlayback(bridge, recordingId, event);
+  }
+
+  if (event?.type === "time_update" || event?.type === "pause") {
+    maybeLoopPlayback(bridge, recordingId, event);
+  }
 }
 
 function normalizeSources(sources) {
@@ -86,10 +212,14 @@ export async function createViewer(parent, moduleUrl, startupOptions, eventCallb
   const viewer = new WebViewer();
   const bridge = {
     viewer,
-    unsubscribers: registerEvents(viewer, eventCallback),
+    unsubscribers: [],
     sources: new Map(),
     panels: new Map(),
+    playbackOptions: normalizePlaybackOptions(null),
+    loopResets: new Map(),
+    recordings: new Set(),
   };
+  bridge.unsubscribers = registerEvents(bridge, eventCallback);
 
   await viewer.start(null, parent, {
     ...startupOptions,
@@ -150,6 +280,13 @@ export function syncPanelOverrides(bridge, overrides, enabled) {
   bridge.panels = nextPanels;
 }
 
+export function syncPlaybackOptions(bridge, options) {
+  bridge.playbackOptions = normalizePlaybackOptions(options);
+  for (const recordingId of bridge.recordings) {
+    configurePlayback(bridge, recordingId, null);
+  }
+}
+
 export function openSource(bridge, url, followIfHttp) {
   bridge.viewer.open(toBrowserUrl(url), { follow_if_http: Boolean(followIfHttp) });
 }
@@ -195,6 +332,9 @@ extern "C" {
         overrides: JsValue,
         enabled: bool,
     ) -> Result<(), JsValue>;
+
+    #[wasm_bindgen(catch, js_name = syncPlaybackOptions)]
+    pub(crate) fn sync_playback_options(bridge: &JsValue, options: JsValue) -> Result<(), JsValue>;
 
     #[wasm_bindgen(catch, js_name = openSource)]
     pub(crate) fn open_source(
