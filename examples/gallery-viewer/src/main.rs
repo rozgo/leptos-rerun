@@ -11,32 +11,32 @@ const EXAMPLES: [GalleryExample; 6] = [
     GalleryExample {
         title: "DNA",
         category: "3D points",
-        url: "https://app.rerun.io/version/0.31.4/examples/dna.rrd",
+        url: "https://app.rerun.io/version/0.33.0/examples/dna.rrd",
     },
     GalleryExample {
         title: "Plots",
         category: "Charts",
-        url: "https://app.rerun.io/version/0.31.4/examples/plots.rrd",
+        url: "https://app.rerun.io/version/0.33.0/examples/plots.rrd",
     },
     GalleryExample {
         title: "Graphs",
         category: "Node-link views",
-        url: "https://app.rerun.io/version/0.31.4/examples/graphs.rrd",
+        url: "https://app.rerun.io/version/0.33.0/examples/graphs.rrd",
     },
     GalleryExample {
         title: "Tracking",
         category: "Detection video",
-        url: "https://app.rerun.io/version/0.31.4/examples/detect_and_track_objects.rrd",
+        url: "https://app.rerun.io/version/0.33.0/examples/detect_and_track_objects.rrd",
     },
     GalleryExample {
         title: "Raw Mesh",
         category: "Geometry",
-        url: "https://app.rerun.io/version/0.31.4/examples/raw_mesh.rrd",
+        url: "https://app.rerun.io/version/0.33.0/examples/raw_mesh.rrd",
     },
     GalleryExample {
         title: "ARKit Scenes",
         category: "Spatial capture",
-        url: "https://app.rerun.io/version/0.31.4/examples/arkit_scenes.rrd",
+        url: "https://app.rerun.io/version/0.33.0/examples/arkit_scenes.rrd",
     },
 ];
 

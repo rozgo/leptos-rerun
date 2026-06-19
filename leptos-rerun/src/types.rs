@@ -3,7 +3,7 @@ use std::collections::BTreeMap;
 use leptos::prelude::{Get, Memo, ReadSignal, RwSignal, Signal, Storage};
 use serde::{Deserialize, Serialize};
 
-pub const DEFAULT_RERUN_CDN_VERSION: &str = "0.31.4";
+pub const DEFAULT_RERUN_CDN_VERSION: &str = "0.33.0";
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub enum AssetOrigin {

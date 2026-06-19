@@ -1,7 +1,7 @@
 use leptos::prelude::*;
 use leptos_rerun::prelude::*;
 
-const SAMPLE_RRD_URL: &str = "https://app.rerun.io/version/0.31.4/examples/dna.rrd";
+const SAMPLE_RRD_URL: &str = "https://app.rerun.io/version/0.33.0/examples/dna.rrd";
 
 fn main() {
     console_error_panic_hook::set_once();

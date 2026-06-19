@@ -4,7 +4,7 @@ use leptos_rerun::prelude::*;
 use leptos_router::components::{Route, Router, Routes};
 use leptos_router::path;
 
-const SAMPLE_RRD_URL: &str = "https://app.rerun.io/version/0.31.4/examples/dna.rrd";
+const SAMPLE_RRD_URL: &str = "https://app.rerun.io/version/0.33.0/examples/dna.rrd";
 
 pub fn shell(options: LeptosOptions) -> impl IntoView {
     view! {
